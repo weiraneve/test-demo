@@ -184,7 +184,7 @@ public void should_return_content() throws Exception {
 - @Mock 在启动spring框架之下（也就是使用@SpringBootTest）条件下，能让字段等价于final Xxx xxx = mock(xxx.class);
 
 ## 静态测试方法
-- mock() ，给予类成员Bean字段mock注入。
+- mock() ，给予类成员字段（可以为非Bean）mock注入。
 - when ， 指定Bean的行为，结合thenReturn，指定mock的Bean返回的内容。
 - verify ， 确定某个Bean是否会调用某个方法。
 - assertEquals ， 断言返回内容的相等。
