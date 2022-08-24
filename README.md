@@ -55,6 +55,8 @@ INSERT INTO order_info
 VALUES(1000, 'Acg2345', 'steve', 'jobs', 'cooker', '运送中', '2022-08-10', 0);
 ```
 
+- 当一个repo层测试文件有多个@Sql注入mock的sql时，需要注意的是，多个注入sql可能导致测试文件的scope被多次注入相同的sql的key，导致报错。解决办法要么在@sql中使用不同的sql文件注入，要么在class上使用@Transactional(rollbackFor = Exception.class)，来保证每个测试方法后会被事务性回滚。
+
 ## service层测试
 service层需要隔离其依赖的repository。也就是将其mock处理。
 
@@ -170,6 +172,7 @@ public void should_return_content() throws Exception {
         .andExpect(jsonPath("$.products.[0].price").value(BigDecimal.valueOf(20).setScale(1)));
 }
 ```
+值得一提的是，很多时候测试可以在开发代码中打断点debug，是非常好的调试测试的办法。
 
 ## 测试注解
 - @JUnitWebAppTest 包含了@Target(ElementType.TYPE)//只能在class上使用、@Retention(RetentionPolicy.RUNTIME)//在运行期生效所以可以反射性地读取它们、@Inherited//允许子类继承、@ActiveProfiles("test")、@SpringBootTest、@AutoConfigureMockMvc。一般来讲集成测试直接使用这个注解在class上就可。
