@@ -212,5 +212,5 @@ describe('checkOrderPage test', () => {
 
 # 工具网址
 - [丰富的React hook库](https://github.com/streamich/react-use)
-- [JPA根据解析方法名自定义查询方法]https://blog.csdn.net/qq_38974638/article/details/120165125
+- [JPA根据解析方法名自定义查询方法](https://blog.csdn.net/qq_38974638/article/details/120165125)
 - [Spring Data JPA官方英文文档](https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#repositories)
