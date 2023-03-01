@@ -1,19 +1,22 @@
-- [后端常见测试](#后端常见测试)
-  - [repository层测试](#repository层测试)
-    - [repository层---存](#repository层---存)
-    - [repository层---查](#repository层---查)
-  - [service层测试](#service层测试)
-    - [不需要依赖repository的service](#不需要依赖repository的service)
-    - [依赖repository的service](#依赖repository的service)
-  - [controller层测试](#controller层测试)
-  - [api测试](#api测试)
-  - [测试注解](#测试注解)
-  - [静态测试方法](#静态测试方法)
-- [常见前端测试](#常见前端测试)
-  - [普通UI测试](#普通ui测试)
+- [后端测试 (springboot)](#后端测试-springboot)
+    - [repository层测试](#repository层测试)
+        - [repository层---存](#repository层---存)
+        - [repository层---查](#repository层---查)
+    - [service层测试](#service层测试)
+        - [不需要依赖repository的service](#不需要依赖repository的service)
+        - [依赖repository的service](#依赖repository的service)
+    - [controller层测试](#controller层测试)
+    - [api测试](#api测试)
+    - [测试注解](#测试注解)
+    - [静态测试方法](#静态测试方法)
+- [Web前端测试 (React)](#web前端测试-react)
+    - [UI测试](#ui测试)
+- [Android测试 (kotlin)](#android测试-kotlin)
+    - [UI测试](#ui测试-1)
+    - [单元测试](#单元测试)
 - [工具网址](#工具网址)
 
-# 后端常见测试
+# 后端测试 (springboot)
 repository层、controller层和api测试，都需要spring框架的支持；而service层是单元测试，不依赖spring框架，但可以启动spring框架，也就是使用集成测试的容器来进行单元测试。单元测试和集成测试的区别在于测试的点而不是启动spring框架与否。
 
 ## repository层测试
@@ -194,9 +197,9 @@ public void should_return_content() throws Exception {
 - assertTrue ， 断言确定返回内容布尔值为真。
 - assertThrows ， 断言确定抛出的异常。
 
-# 常见前端测试
+# Web前端测试 (React)
 
-## 普通UI测试
+## UI测试
 ```javascript
 jest.mock('./service');
 getOrderList.mockResolvedValue([]);
@@ -208,7 +211,128 @@ describe('checkOrderPage test', () => {
   });
 });
 ```
-前端测试未完待续······
+
+# Android测试 (kotlin)
+
+## UI测试
+```kotlin
+@RunWith(AndroidJUnit4::class)
+@LargeTest
+class LoginActivityTest {
+
+    @get:Rule
+    val activityRule = ActivityScenarioRule<LoginActivity>(
+        Intent(
+            ApplicationProvider.getApplicationContext(),
+            LoginActivity::class.java
+        )
+    )
+
+    @Test
+    fun test_login_page_clickedAndDisplay() {
+        onView(withId(R.id.login)).perform(click())
+        onView(withId(R.id.logo)).check(matches(isDisplayed()))
+        onView(withId(R.id.checkbox_remember_me)).perform(click()).check(matches(isChecked()))
+    }
+}
+```
+
+## 单元测试
+
+> ViewModel
+
+```
+@ExperimentalCoroutinesApi
+class TweetsViewModelUnitTest {
+
+    @ExperimentalCoroutinesApi
+    private val testDispatcher = StandardTestDispatcher()
+
+    private val repository = mockk<Repository>()
+    private val remoteDataSource = mockk<Repository>()
+    private val tweets: MutableList<Tweet> = mutableListOf()
+
+    @Before
+    fun before() {
+        Dispatchers.setMain(testDispatcher)
+        tweets.addAll(listOf(Tweet(), Tweet()))
+    }
+
+    @After
+    fun tearDown() {
+        Dispatchers.resetMain()
+    }
+
+    @Test
+    fun test_observe_tweets_successful() = runTest {
+        // given
+        coEvery { repository.fetchTweets() } returns flowOf(MyRepoResult.Success(tweets))
+        coEvery { repository.saveTweets(tweets) } returns Unit
+        val tweetsViewModel = TweetsViewModel(repository)
+        // when
+        tweetsViewModel.observeTweets()
+        advanceUntilIdle()
+        val result = tweetsViewModel.uiState.value
+        // then
+        Assert.assertNotNull(result)
+        Assert.assertEquals(2, (result as Result.Success).data?.size)
+    }
+
+    @Test
+    fun test_observe_tweets_failed_by_networkError() = runTest {
+        // given
+        coEvery { remoteDataSource.fetchTweets() } throws UnknownHostException(ERROR)
+        coEvery { repository.fetchTweets() } returns flowOf(
+            MyRepoResult.Error(
+                UnknownHostException(
+                    ERROR
+                )
+            )
+        )
+        coEvery { repository.getTweets() } returns emptyList()
+        val tweetsViewModel = TweetsViewModel(repository)
+        // when
+        tweetsViewModel.observeTweets()
+        advanceUntilIdle()
+        val item = tweetsViewModel.uiState.value
+        // then
+        Assert.assertNotNull((item as Result.Error).exception.message)
+        Assert.assertEquals(ERROR, item.exception.message)
+    }
+
+    companion object {
+        const val ERROR = "network error"
+    }
+
+}
+```
+
+> Repository
+
+```
+@OptIn(ExperimentalCoroutinesApi::class)
+class FeedRepositoryTest {
+
+    private val feedList = FeedListEntity(0, null)
+
+    private val feedApiDataSource = mockk<FeedApiDataSource>()
+    private val feedRepository = FeedRepository(feedApiDataSource)
+
+    @Before
+    fun setUp() {
+        coEvery { feedApiDataSource.getFeedList() } returns flowOf(Result.Success(feedList))
+    }
+
+    @Test
+    fun shouldCallDataSourceWhenFetchFeedListFromRepository() = runTest {
+        // when
+        val result = feedRepository.getFeedList().first()
+        // then
+        coVerify(exactly = 1) { feedApiDataSource.getFeedList() }
+        assertThat((result as Result.Success).data).isEqualTo(feedList)
+    }
+}
+```
 
 # 工具网址
 - [丰富的React hook库](https://github.com/streamich/react-use)
