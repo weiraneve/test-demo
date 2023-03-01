@@ -241,7 +241,7 @@ class LoginActivityTest {
 
 > ViewModel
 
-```
+```kotlin
 @ExperimentalCoroutinesApi
 class TweetsViewModelUnitTest {
 
@@ -309,7 +309,7 @@ class TweetsViewModelUnitTest {
 
 > Repository
 
-```
+```kotlin
 @OptIn(ExperimentalCoroutinesApi::class)
 class FeedRepositoryTest {
 
